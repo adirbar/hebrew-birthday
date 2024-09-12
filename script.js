@@ -2,8 +2,10 @@ document.getElementById('birthdate-form').addEventListener('submit', async funct
     e.preventDefault();
 
     const name = document.getElementById('name').value;
-    const originalDate = new Date(document.getElementById('gregorian-date').value);
-    const originalYear = originalDate.getFullYear();
+    const originalDate = document.getElementById('gregorian-date').value.split('/');
+    const originalYear = parseInt(originalDate[2]);
+    const originalMonth = parseInt(originalDate[1]);
+    const originalDay = parseInt(originalDate[0]);
     const startYear = parseInt(document.getElementById('start-year').value);
     const endYear = parseInt(document.getElementById('end-year').value);
 
@@ -16,7 +18,7 @@ document.getElementById('birthdate-form').addEventListener('submit', async funct
 
     try {
         // קריאה ל-API של Hebcal להמרת תאריך לועזי לעברי עבור השנה הראשונה (תאריך לידה מקורי)
-        const response = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${originalYear}&gm=${originalDate.getMonth() + 1}&gd=${originalDate.getDate()}&g2h=1`);
+        const response = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${originalYear}&gm=${originalMonth}&gd=${originalDay}&g2h=1`);
         const hebcalData = await response.json();
 
         // הצגת התאריך העברי כפי שהתקבל מה-API עבור תאריך הלידה המקורי
@@ -33,8 +35,16 @@ document.getElementById('birthdate-form').addEventListener('submit', async funct
 
             // הוספת התאריך הלועזי והעברי לרשימת ימי ההולדת
             const birthday = `${birthdayData.gd}/${birthdayData.gm}/${birthdayData.gy} - יום הולדת ל${name} ${age} (עברי - ${birthdayData.hebrew})`;
+
+            const googleLink = `https://calendar.google.com/calendar/r/eventedit?text=יום+הולדת+ל${name}+${age}&dates=${birthdayData.gy}${birthdayData.gm.toString().padStart(2, '0')}${birthdayData.gd.toString().padStart(2, '0')}/${birthdayData.gy}${birthdayData.gm.toString().padStart(2, '0')}${birthdayData.gd.toString().padStart(2, '0')}`;
+            const outlookLink = `https://outlook.live.com/calendar/0/deeplink/compose?subject=יום+הולדת+ל${name}+${age}&startdt=${birthdayData.gy}-${birthdayData.gm.toString().padStart(2, '0')}-${birthdayData.gd.toString().padStart(2, '0')}`;
+            const appleLink = `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:יום+הולדת+ל${name}+${age}%0ADTSTART:${birthdayData.gy}${birthdayData.gm.toString().padStart(2, '0')}${birthdayData.gd.toString().padStart(2, '0')}%0AEND:VEVENT%0AEND:VCALENDAR`;
+
             const listItem = document.createElement('li');
-            listItem.textContent = birthday;
+            listItem.innerHTML = `${birthday} 
+                <a href="${googleLink}" target="_blank" class="calendar-button">הוסף ל-Google Calendar</a>
+                <a href="${outlookLink}" target="_blank" class="calendar-button">הוסף ל-Outlook</a>
+                <a href="${appleLink}" download="birthday_${name}_${age}.ics" class="calendar-button">הוסף ל-Apple Calendar</a>`;
             birthdayList.appendChild(listItem);
 
             // שמירת הנתונים עבור CSV
@@ -76,4 +86,25 @@ document.getElementById('birthdate-form').addEventListener('submit', async funct
 // כפתור למעבר למצב כהה
 document.getElementById('toggle-dark-mode').addEventListener('click', function () {
     document.body.classList.toggle('dark-mode');
+});
+
+// פתיחת הסרטון במודאל
+document.getElementById('tutorial-button').addEventListener('click', function () {
+    document.getElementById('tutorial-modal').style.display = 'block';
+});
+
+// סגירת המודאל והפסקת הסרטון
+document.getElementsByClassName('close')[0].addEventListener('click', function () {
+    document.getElementById('tutorial-modal').style.display = 'none';
+    const video = document.getElementById('youtube-video');
+    video.contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
+});
+
+// סגירת המודאל כאשר לוחצים מחוץ לו והפסקת הסרטון
+window.addEventListener('click', function (event) {
+    if (event.target == document.getElementById('tutorial-modal')) {
+        document.getElementById('tutorial-modal').style.display = 'none';
+        const video = document.getElementById('youtube-video');
+        video.contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
+    }
 });
