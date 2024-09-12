@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחולל ימי הולדת בתאריך עברי</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-birthday-cake"></i> מחולל ימי הולדת בתאריך עברי</h1>
+            <h3>נבנה על ידי אדיר ברטוב באמצעות ChatGPT</h3>
+            <button id="toggle-dark-mode"><i class="fas fa-moon"></i> מצב כהה</button>
+        </header>
+
+        <form id="birthdate-form">
+            <div class="form-group">
+                <label for="name"><i class="fas fa-user"></i> שם</label>
+                <input type="text" id="name" placeholder="הזן שם" required>
+            </div>
+
+            <div class="form-group">
+                <label for="gregorian-date"><i class="fas fa-calendar-alt"></i> תאריך לידה לועזי (DD/MM/YYYY)</label>
+                <input type="date" id="gregorian-date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="start-year"><i class="fas fa-calendar-plus"></i> שנת התחלה (לועזית)</label>
+                <input type="number" id="start-year" required>
+            </div>
+
+            <div class="form-group">
+                <label for="end-year"><i class="fas fa-calendar-minus"></i> שנת סיום (לועזית)</label>
+                <input type="number" id="end-year" required>
+            </div>
+
+            <button type="submit"><i class="fas fa-sync-alt"></i> המר</button>
+        </form>
+
+        <div id="loading-spinner" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> מבצע המרה...
+        </div>
+
+        <div id="results">
+            <h2>ימי הולדת לועזיים</h2>
+            <p id="hebrew-birthday"></p>
+            <ul id="birthday-list"></ul>
+            <button id="download-csv" style="display:none;"><i class="fas fa-download"></i> הורד כ-CSV</button>
+        </div>
+
+        <footer>
+            <p style="font-size: 10px;">This tool uses Hebcal API and is licensed under Creative Commons Attribution 4.0 International License.</p>
+        </footer>
+
+        <script src="script.js"></script>
+    </div>
+</body>
+</html>
