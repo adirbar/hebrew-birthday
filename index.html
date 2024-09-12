@@ -23,7 +23,7 @@
 
             <div class="form-group">
                 <label for="gregorian-date"><i class="fas fa-calendar-alt"></i> תאריך לידה לועזי (DD/MM/YYYY)</label>
-                <input type="date" id="gregorian-date" required>
+                <input type="text" id="gregorian-date" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}" required>
             </div>
 
             <div class="form-group">
@@ -48,6 +48,17 @@
             <p id="hebrew-birthday"></p>
             <ul id="birthday-list"></ul>
             <button id="download-csv" style="display:none;"><i class="fas fa-download"></i> הורד כ-CSV</button>
+        </div>
+
+        <!-- כפתור סרטון הדרכה -->
+        <button id="tutorial-button" class="tutorial-button">צפה בסרטון הדרכה לייבוא ה-CSV</button>
+
+        <!-- חלון מודאל -->
+        <div id="tutorial-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <iframe id="youtube-video" width="560" height="315" src="https://www.youtube.com/embed/Sxr481FO4_M?start=198" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
         </div>
 
         <footer>
