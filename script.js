@@ -1,126 +1,192 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const isMobile = window.matchMedia("(max-width: 1024px)").matches;
-    
-    if (!isMobile) {
-        // מציג את הסרטון במחשב
-        document.getElementById('desktop-tutorial').style.display = 'block';
-        document.getElementById('tutorial-button').style.display = 'none';
-    } else {
-        // מציג כפתור למובייל בלבד
-        document.getElementById('desktop-tutorial').style.display = 'none';
-        document.getElementById('tutorial-button').style.display = 'block';
-    }
-
     // כפתור למעבר למצב כהה
     document.getElementById('toggle-dark-mode').addEventListener('click', function () {
         document.body.classList.toggle('dark-mode');
     });
 
-    // פתיחת הסרטון במודאל במובייל
-    document.getElementById('tutorial-button').addEventListener('click', function () {
-        document.getElementById('tutorial-modal').style.display = 'block';
-    });
+    // משתנה לסוג האירוע
+    let eventType = 'birthday';
 
-    // סגירת המודאל והפסקת הסרטון במובייל
-    document.getElementsByClassName('close')[0].addEventListener('click', function () {
-        document.getElementById('tutorial-modal').style.display = 'none';
-        const video = document.getElementById('youtube-video');
-        video.contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
-    });
-
-    // סגירת המודאל כאשר לוחצים מחוץ לו והפסקת הסרטון במובייל
-    window.addEventListener('click', function (event) {
-        if (event.target == document.getElementById('tutorial-modal')) {
-            document.getElementById('tutorial-modal').style.display = 'none';
-            const video = document.getElementById('youtube-video');
-            video.contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
-        }
-    });
-});
-
-// פונקציה להמרת ימי הולדת
-document.getElementById('birthdate-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const name = document.getElementById('name').value;
-    const originalDate = document.getElementById('gregorian-date').value.split('/');
-    const originalYear = parseInt(originalDate[2]);
-    const originalMonth = parseInt(originalDate[1]);
-    const originalDay = parseInt(originalDate[0]);
-    const startYear = parseInt(document.getElementById('start-year').value);
-    const endYear = parseInt(document.getElementById('end-year').value);
-
-    // הצגת ספינר טעינה
-    document.getElementById('loading-spinner').style.display = 'inline-block';
-
-    const birthdayList = document.getElementById('birthday-list');
-    birthdayList.innerHTML = ''; // נקה תוצאות קודמות
-    const birthdays = []; // לאיסוף נתונים עבור CSV
-
-    try {
-        // קריאה ל-API של Hebcal להמרת תאריך לועזי לעברי עבור השנה הראשונה (תאריך לידה מקורי)
-        const response = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${originalYear}&gm=${originalMonth}&gd=${originalDay}&g2h=1`);
-        const hebcalData = await response.json();
-
-        // הצגת התאריך העברי כפי שהתקבל מה-API עבור תאריך הלידה המקורי
-        const hebrewDate = `${hebcalData.hebrew}`;
-        document.getElementById('hebrew-birthday').textContent = `תאריך עברי: ${hebrewDate}`;
-
-        // לולאה עבור כל שנה בטווח
-        for (let year = startYear; year <= endYear; year++) {
-            const age = year - originalYear;
-
-            // קריאה ל-API עבור כל שנה בטווח כדי להמיר את התאריך העברי חזרה ללועזי
-            const birthdayResponse = await fetch(`https://www.hebcal.com/converter?cfg=json&hy=${hebcalData.hy + age}&hm=${hebcalData.hm}&hd=${hebcalData.hd}&h2g=1`);
-            const birthdayData = await birthdayResponse.json();
-
-            // הוספת התאריך הלועזי והעברי לרשימת ימי ההולדת
-            const birthday = `${birthdayData.gd}/${birthdayData.gm}/${birthdayData.gy} - יום הולדת ל${name} ${age} (עברי - ${birthdayData.hebrew})`;
-
-            // יצירת קישורים להוספה ליומנים
-            const googleLink = `https://calendar.google.com/calendar/r/eventedit?text=יום+הולדת+ל${name}+${age}&dates=${birthdayData.gy}${birthdayData.gm.toString().padStart(2, '0')}${birthdayData.gd.toString().padStart(2, '0')}/${birthdayData.gy}${birthdayData.gm.toString().padStart(2, '0')}${birthdayData.gd.toString().padStart(2, '0')}`;
-            const outlookLink = `https://outlook.live.com/calendar/0/deeplink/compose?subject=יום+הולדת+ל${name}+${age}&startdt=${birthdayData.gy}-${birthdayData.gm.toString().padStart(2, '0')}-${birthdayData.gd.toString().padStart(2, '0')}`;
-            const appleLink = `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:יום+הולדת+ל${name}+${age}%0ADTSTART:${birthdayData.gy}${birthdayData.gm.toString().padStart(2, '0')}${birthdayData.gd.toString().padStart(2, '0')}%0AEND:VEVENT%0AEND:VCALENDAR`;
-
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `${birthday} 
-                <a href="${googleLink}" target="_blank" class="calendar-button">הוסף ל-Google Calendar</a>
-                <a href="${outlookLink}" target="_blank" class="calendar-button">הוסף ל-Outlook</a>
-                <a href="${appleLink}" download="birthday_${name}_${age}.ics" class="calendar-button">הוסף ל-Apple Calendar</a>`;
-            birthdayList.appendChild(listItem);
-
-            // שמירת הנתונים עבור CSV
-            birthdays.push({
-                event: `יום הולדת ל${name} ${age} (עברי - ${birthdayData.hebrew})`,
-                date: `${birthdayData.gd}/${birthdayData.gm}/${birthdayData.gy}`
-            });
-        }
-
-        // הצגת כפתור להורדת קובץ CSV
-        document.getElementById('download-csv').style.display = 'inline-block';
-
-        // כפתור ייצוא ל-CSV
-        document.getElementById('download-csv').addEventListener('click', function () {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Subject,Start Date\n"; // כותרות עמודות
-
-            birthdays.forEach(function(birthday) {
-                csvContent += `${birthday.event},${birthday.date}\n`; // הוספת כל תאריך ואירוע
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'birthdays.csv');
-            document.body.appendChild(link); // נדרש עבור Firefox
-            link.click();
-            document.body.removeChild(link); // נקה לאחר ההורדה
+    // טיפול בלחיצות על כפתורי סוג האירוע
+    const eventButtons = document.querySelectorAll('.event-type-button');
+    eventButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            // הסרת מחלקה 'active' מכל הכפתורים
+            eventButtons.forEach(btn => btn.classList.remove('active'));
+            // הוספת מחלקה 'active' לכפתור שנלחץ
+            this.classList.add('active');
+            // עדכון סוג האירוע
+            eventType = this.getAttribute('data-type');
+            // עדכון ה-UI בהתאם
+            updateUIForEventType();
         });
+    });
 
-    } catch (error) {
-        console.error('Error fetching Hebcal API:', error);
-    } finally {
-        // הסתרת ספינר הטעינה
-        document.getElementById('loading-spinner').style.display = 'none';
+    function updateUIForEventType() {
+        const mainTitle = document.getElementById('main-title');
+        const mainIcon = document.getElementById('main-icon');
+        const dateLabel = document.getElementById('date-label');
+        const resultsTitle = document.getElementById('results-title');
+
+        if (eventType === 'birthday') {
+            mainTitle.innerHTML = '<i id="main-icon" class="fas fa-birthday-cake"></i> מחולל ימי הולדת בתאריך עברי';
+            dateLabel.textContent = 'תאריך לידה לועזי (DD/MM/YYYY)';
+            resultsTitle.textContent = 'תאריכי ימי הולדת לועזיים';
+        } else if (eventType === 'anniversary') {
+            mainTitle.innerHTML = '<i id="main-icon" class="fas fa-ring"></i> מחולל ימי נישואין בתאריך עברי';
+            dateLabel.textContent = 'תאריך נישואין לועזי (DD/MM/YYYY)';
+            resultsTitle.textContent = 'תאריכי ימי נישואין לועזיים';
+        } else if (eventType === 'memorial') {
+            mainTitle.innerHTML = '<i id="main-icon" class="fas fa-candle"></i> מחולל ימי אזכרה בתאריך עברי';
+            dateLabel.textContent = 'תאריך פטירה לועזי (DD/MM/YYYY)';
+            resultsTitle.textContent = 'תאריכי ימי אזכרה לועזיים';
+        }
     }
+
+    // פונקציה להמרת האירועים
+    document.getElementById('event-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value;
+        let [day, month, year] = document.getElementById('gregorian-date').value.split('/').map(Number);
+        const afterSunset = document.getElementById('after-sunset').checked;
+        if (afterSunset) {
+            // הוספת יום אחד לתאריך אם נבחר "אחרי שקיעה"
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + 1);
+            day = date.getDate();
+            month = date.getMonth() + 1;
+            year = date.getFullYear();
+        }
+        const originalYear = year;
+        const originalMonth = month;
+        const originalDay = day;
+        const startYear = parseInt(document.getElementById('start-year').value);
+        const endYear = parseInt(document.getElementById('end-year').value);
+
+        // אימות טווח השנים
+        if (endYear < startYear) {
+            alert('שנת הסיום חייבת להיות שווה או גדולה משנת ההתחלה.');
+            return;
+        }
+
+        // הצגת ספינר טעינה
+        document.getElementById('loading-spinner').style.display = 'inline-block';
+
+        const eventList = document.getElementById('event-list');
+        eventList.innerHTML = ''; // נקה תוצאות קודמות
+        const events = []; // לאיסוף נתונים עבור CSV
+
+        try {
+            // קריאה ל-API של Hebcal להמרת תאריך לועזי לעברי עבור התאריך המקורי
+            const response = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${originalYear}&gm=${originalMonth}&gd=${originalDay}&g2h=1`);
+            const hebcalData = await response.json();
+
+            // בדיקת שגיאות בתגובה
+            if (hebcalData.error) {
+                alert('תאריך לועזי לא תקין. אנא ודא שהזנת את התאריך בפורמט DD/MM/YYYY.');
+                document.getElementById('loading-spinner').style.display = 'none';
+                return;
+            }
+
+            // הצגת התאריך העברי כפי שהתקבל מה-API עבור התאריך המקורי
+            const hebrewDate = `${hebcalData.hebrew}`;
+            document.getElementById('hebrew-date').textContent = `תאריך עברי: ${hebrewDate}`;
+
+            // לולאה עבור כל שנה בטווח
+            for (let year = startYear; year <= endYear; year++) {
+                const age = year - originalYear;
+
+                // קריאה ל-API עבור כל שנה בטווח כדי להמיר את התאריך העברי חזרה ללועזי
+                const eventResponse = await fetch(`https://www.hebcal.com/converter?cfg=json&hy=${hebcalData.hy + age}&hm=${hebcalData.hm}&hd=${hebcalData.hd}&h2g=1`);
+                const eventData = await eventResponse.json();
+
+                // יצירת טקסטים בהתאם לסוג האירוע
+                let eventText = '';
+                let eventTitle = '';
+                if (eventType === 'birthday') {
+                    eventText = `יום הולדת ל${name} ${age} (עברי - ${eventData.hebrew})`;
+                    eventTitle = `יום הולדת ל${name} ${age}`;
+                } else if (eventType === 'anniversary') {
+                    eventText = `יום נישואין ל${name} ${age} (עברי - ${eventData.hebrew})`;
+                    eventTitle = `יום נישואין ל${name} ${age}`;
+                } else if (eventType === 'memorial') {
+                    eventText = `יום אזכרה ל${name} (${eventData.hebrew})`;
+                    eventTitle = `יום אזכרה ל${name}`;
+                }
+
+                // יצירת פריט רשימה
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<strong>${eventData.gd}/${eventData.gm}/${eventData.gy}</strong> - ${eventText}`;
+
+                // יצירת כפתורים מתחת לכל אירוע
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.classList.add('event-buttons');
+
+                // יצירת קישורים להוספה ליומנים
+                const googleLink = `https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(eventTitle)}&dates=${eventData.gy}${eventData.gm.toString().padStart(2, '0')}${eventData.gd.toString().padStart(2, '0')}/${eventData.gy}${eventData.gm.toString().padStart(2, '0')}${eventData.gd.toString().padStart(2, '0')}`;
+                const outlookLink = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(eventTitle)}&startdt=${eventData.gy}-${eventData.gm.toString().padStart(2, '0')}-${eventData.gd.toString().padStart(2, '0')}`;
+                const appleLink = `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:${encodeURIComponent(eventTitle)}%0ADTSTART:${eventData.gy}${eventData.gm.toString().padStart(2, '0')}${eventData.gd.toString().padStart(2, '0')}%0AEND:VEVENT%0AEND:VCALENDAR`;
+
+                const button1 = document.createElement('a');
+                button1.textContent = 'הוסף ליומן Google';
+                button1.href = googleLink;
+                button1.target = '_blank';
+                button1.classList.add('small-button');
+
+                const button2 = document.createElement('a');
+                button2.textContent = 'הוסף ל-Outlook';
+                button2.href = outlookLink;
+                button2.target = '_blank';
+                button2.classList.add('small-button');
+
+                const button3 = document.createElement('a');
+                button3.textContent = 'הורד קובץ .ics לאייפון';
+                button3.href = appleLink;
+                button3.download = `event_${name}_${year}.ics`;
+                button3.classList.add('small-button');
+
+                buttonsContainer.appendChild(button1);
+                buttonsContainer.appendChild(button2);
+                buttonsContainer.appendChild(button3);
+
+                listItem.appendChild(buttonsContainer);
+                eventList.appendChild(listItem);
+
+                // שמירת הנתונים עבור CSV
+                events.push({
+                    event: eventTitle,
+                    date: `${eventData.gd}/${eventData.gm}/${eventData.gy}`
+                });
+            }
+
+            // הצגת כפתור להורדת קובץ CSV
+            document.getElementById('download-csv').style.display = 'inline-block';
+
+            // כפתור ייצוא ל-CSV
+            document.getElementById('download-csv').addEventListener('click', function () {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Subject,Start Date\n"; // כותרות עמודות
+
+                events.forEach(function(event) {
+                    csvContent += `${event.event},${event.date}\n`; // הוספת כל תאריך ואירוע
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', 'events.csv');
+                document.body.appendChild(link); // נדרש עבור Firefox
+                link.click();
+                document.body.removeChild(link); // נקה לאחר ההורדה
+            });
+
+        } catch (error) {
+            console.error('Error fetching Hebcal API:', error);
+            alert('אירעה שגיאה בקבלת הנתונים. אנא נסה שוב מאוחר יותר.');
+        } finally {
+            // הסתרת ספינר הטעינה
+            document.getElementById('loading-spinner').style.display = 'none';
+        }
+    });
 });
