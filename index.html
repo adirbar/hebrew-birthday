@@ -3,27 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מחולל ימי הולדת בתאריך עברי</title>
+    <title>מחולל אירועים בתאריך עברי</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- ייבוא אייקונים -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-birthday-cake"></i> מחולל ימי הולדת בתאריך עברי</h1>
+            <h1 id="main-title"><i id="main-icon" class="fas fa-birthday-cake"></i> מחולל אירועים בתאריך עברי</h1>
             <h3>נבנה על ידי אדיר ברטוב באמצעות ChatGPT</h3>
             <button id="toggle-dark-mode"><i class="fas fa-moon"></i> מצב כהה</button>
         </header>
 
-        <form id="birthdate-form">
+        <!-- בחירת סוג האירוע -->
+        <div class="event-type-selection">
+            <button type="button" class="event-type-button active" data-type="birthday">יום הולדת</button>
+            <button type="button" class="event-type-button" data-type="anniversary">יום נישואין</button>
+            <button type="button" class="event-type-button" data-type="memorial">אזכרה</button>
+        </div>
+
+        <form id="event-form">
             <div class="form-group">
                 <label for="name"><i class="fas fa-user"></i> שם</label>
                 <input type="text" id="name" placeholder="הזן שם" required>
             </div>
 
             <div class="form-group">
-                <label for="gregorian-date"><i class="fas fa-calendar-alt"></i> תאריך לידה לועזי (DD/MM/YYYY)</label>
+                <label for="gregorian-date"><i class="fas fa-calendar-alt"></i> <span id="date-label">תאריך לידה לועזי (DD/MM/YYYY)</span></label>
                 <input type="text" id="gregorian-date" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}" required>
+                <div class="checkbox-container">
+                    <label for="after-sunset">אחרי שקיעה</label>
+                    <input type="checkbox" id="after-sunset">
+                </div>
             </div>
 
             <div class="form-group">
@@ -36,7 +48,8 @@
                 <input type="number" id="end-year" required>
             </div>
 
-            <button type="submit"><i class="fas fa-sync-alt"></i> המר לאירועי יומן</button>
+            <button type="submit" class="full-width-button"><i class="fas fa-sync-alt"></i> המר לאירועי יומן</button>
+            <button type="reset" class="full-width-button reset-button"><i class="fas fa-redo"></i> אפס טופס</button>
         </form>
 
         <div id="loading-spinner" style="display: none;">
@@ -44,34 +57,24 @@
         </div>
 
         <div id="results">
-            <h2>ימי הולדת לועזיים</h2>
-            <p id="hebrew-birthday"></p>
-            <ul id="birthday-list"></ul>
+            <h2 id="results-title">תאריכי ימי הולדת לועזיים</h2>
+            <p id="hebrew-date"></p>
+            <ul id="event-list"></ul>
             <button id="download-csv" style="display:none;"><i class="fas fa-download"></i> הורד כ-CSV</button>
         </div>
 
-        <!-- אם המכשיר הוא מחשב, הסרטון יופיע מוטמע -->
-        <div id="desktop-tutorial" class="desktop-video">
+        <!-- סרטון הדרכה -->
+        <div class="tutorial-video">
             <h3>כיצד לייבא CSV ליומן גוגל</h3>
-            <iframe id="youtube-video-desktop" width="560" height="315" src="https://www.youtube.com/embed/Sxr481FO4_M?start=198" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-
-        <!-- כפתור סרטון הדרכה במובייל -->
-        <button id="tutorial-button" class="tutorial-button">צפה בסרטון הדרכה לייבוא ה-CSV</button>
-
-        <!-- חלון מודאל במובייל -->
-        <div id="tutorial-modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <iframe id="youtube-video" width="560" height="315" src="https://www.youtube.com/embed/Sxr481FO4_M?start=198" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>
+            <iframe id="youtube-video" src="https://www.youtube.com/embed/Sxr481FO4_M?start=198" frameborder="0" allowfullscreen></iframe>
         </div>
 
         <footer>
-            <p style="font-size: 10px;">This tool uses Hebcal API and is licensed under Creative Commons Attribution 4.0 International License. Data sourced from hebcal.com</p>
+            <p style="font-size: 10px;">כלי זה משתמש ב-API של Hebcal ומורשה תחת Creative Commons Attribution 4.0 International License. נתונים מ-hebcal.com</p>
         </footer>
 
-        <script src="script.js"></script>
+        <!-- סקריפט -->
+        <script src="script.js" defer></script>
     </div>
 </body>
 </html>
