@@ -37,15 +37,15 @@ document.addEventListener('DOMContentLoaded', function () {
             dateLabel.textContent = 'תאריך נישואין לועזי (DD/MM/YYYY)';
             resultsTitle.textContent = 'תאריכי ימי נישואין לועזיים';
         } else if (eventType === 'memorial') {
-            mainTitle.innerHTML = '🕯️ מחולל ימי אזכרה בתאריך עברי';
+            mainTitle.innerHTML = '<i id="main-icon" class="fas fa-candle"></i> מחולל ימי אזכרה בתאריך עברי';
             dateLabel.textContent = 'תאריך פטירה לועזי (DD/MM/YYYY)';
             resultsTitle.textContent = 'תאריכי ימי אזכרה לועזיים';
         }
     }
 
-    // פונקציה לפורמט תאריך עבור Google Calendar
+    // פונקציה לפורמט תאריך עבור Google Calendar (ללא שעה)
     function formatGoogleCalendarDate(year, month, day) {
-        return `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}T000000Z`;
+        return `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}`;
     }
 
     // פונקציה להמרת האירועים
@@ -130,14 +130,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // יצירת תאריכים בפורמט המתאים
                 const startDate = formatGoogleCalendarDate(eventData.gy, eventData.gm, eventData.gd);
-                const endDate = startDate; // אירוע של יום אחד
+
+                // חישוב endDate על ידי הוספת יום אחד ל-startDate
+                const endDateObj = new Date(eventData.gy, eventData.gm - 1, eventData.gd);
+                endDateObj.setDate(endDateObj.getDate() + 1);
+                const endDate = formatGoogleCalendarDate(endDateObj.getFullYear(), endDateObj.getMonth() + 1, endDateObj.getDate());
 
                 // יצירת קישורים להוספה ליומנים
                 const googleLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate}/${endDate}&ctz=Asia/Jerusalem`;
 
                 const outlookLink = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(eventTitle)}&startdt=${eventData.gy}-${eventData.gm.toString().padStart(2, '0')}-${eventData.gd.toString().padStart(2, '0')}`;
 
-                const appleLink = `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:${encodeURIComponent(eventTitle)}%0ADTSTART;VALUE=DATE:${startDate.substring(0,8)}%0AEND:VEVENT%0AEND:VCALENDAR`;
+                const appleLink = `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:${encodeURIComponent(eventTitle)}%0ADTSTART;VALUE=DATE:${startDate}%0AEND:VEVENT%0AEND:VCALENDAR`;
 
                 const button1 = document.createElement('a');
                 button1.textContent = 'הוסף ליומן Google';
